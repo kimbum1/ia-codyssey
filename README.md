@@ -1,15 +1,22 @@
-# 🐳 내 컴퓨터에 개발자용 '작업실' 꾸미기 프로젝트
+# 내 컴퓨터에 개발자용 '작업실' 꾸미기
 
-## 1) 프로젝트 개요
-본 프로젝트는 Mac Apple Silicon 환경에서 Docker와 Git을 설치하고, 터미널 기초 조작부터 컨테이너 기반 웹 서버 구축, 데이터 영속성 관리, 그리고 GitHub 협업 환경을 구축하는 것을 목표로 합니다.
+## 1) 실행 환경
+- **OS**{
+ ProductName:		macOS
+ ProductVersion:		15.7.4
+ BuildVersion:		24G517
+}
+- **Shell**{
+  /bin/zsh
+  }
+- **Docker**{
+   Docker version 28.5.2, build ecc6942
+  }
+- **Git**{
+  git version 2.53.0
+}
 
-## 2) 실행 환경
-- **OS**: macOS Sequoia 15.7.4 (Apple Silicon)
-- **Shell**: zsh
-- **Docker**: 28.5.2 (OrbStack)
-- **Git**: 2.53.0
-
-## 3) 수행 항목 체크리스트
+## 2) 수행 항목 체크리스트
 - [x] 터미널 기본 조작 (이동, 생성, 복사, 삭제 등)
 - [x] 권한 변경 실습 (파일 및 디렉토리)
 - [x] Docker 설치 및 데몬 상태 확인
@@ -21,7 +28,7 @@
 - [x] Git 설정 및 GitHub SSH 연동
 - [x] (보너스) Docker Compose 멀티 컨테이너 구축
 
-## 4) 수행 로그 및 검증
+## 3) 수행 로그 및 검증
 
 ### 1. 터미널 조작 로그
 ```bash
@@ -87,6 +94,19 @@ gudqja346411@c6r1s6 ~ % git config --list | grep user
 user.name=gudqja346411
 user.email=...
 
+##4 트러블슈팅
+
+**사례 1: GitHub 원격 저장소와 로컬 저장소 병합 충돌**
+- **문제:** `git pull origin main` 실행 시 `fatal: Need to specify how to reconcile divergent branches` 에러 발생
+- **원인 가설:** 로컬과 원격 저장소의 커밋 히스토리가 달라 Git이 병합 방식을 결정하지 못함
+- **해결/대안:** `git config pull.rebase false` 명령어로 기본 병합 방식을 설정한 후, `--allow-unrelated-histories` 옵션을 주어 강제 병합 성공. 이후 Vim 편집기에서 `:wq`로 커밋 메시지 저장 후 push 완료.
+
+* **관찰 결과 요약:** `docker run -it`로 진입한 쉘에서 `exit`를 누르면 컨테이너가 완전히 종료(Exited)되지만, `docker exec -it`를 사용해 실행 중인 컨테이너에 접속한 경우 `exit`로 빠져나와도 컨테이너는 계속 백그라운드에서 실행 상태(Up)를 유지함을 확인했습니다.
+
+**사례 2: (과제하시면서 겪었던 오타, 포트 충돌, 권한 에러 등 아무거나 하나 더 작성해 주세요)**
+
+* **베이스 이미지:** `nginx:latest` (가벼운 웹 서버 구동 목적)
+* **커스텀 포인트:** `COPY index.html ...` (Nginx의 기본 웰컴 페이지를 내가 만든 커스텀 HTML 파일로 덮어씌워 나만의 웹페이지를 띄우기 위함)
 
 ## 최종 결과물 스크린샷
 ![과제 결과](./evidence.png)
