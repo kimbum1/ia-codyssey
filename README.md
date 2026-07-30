@@ -108,5 +108,9 @@ user.email=...
 * **베이스 이미지:** `nginx:latest` (가벼운 웹 서버 구동 목적)
 * **커스텀 포인트:** `COPY index.html ...` (Nginx의 기본 웰컴 페이지를 내가 만든 커스텀 HTML 파일로 덮어씌워 나만의 웹페이지를 띄우기 위함)
 
-## 최종 결과물 스크린샷
-![과제 결과](./evidence.png)
+```
+<img width="782" height="695" alt="evidence" src="https://github.com/user-attachments/assets/8e46eccf-ac2b-4dca-b1af-53c793ec030d" />
+
+<img width="769" height="534" alt="evidence2" src="https://github.com/user-attachments/assets/945bebd0-0e81-4bd3-9e84-91cdd019e198" />
+
+<img width="750" height="285" alt="evidence3" src="https://github.com/user-attachments/assets/57a5f396-0182-47dd-8e4b-c3d5c46503ca" />
