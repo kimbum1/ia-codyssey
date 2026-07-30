@@ -66,6 +66,14 @@ Docker version 28.5.2
 gudqja346411@c6r1s6 ~ % docker info | grep "Server Version"
  Server Version: 28.5.2
 
+# 커스텀 이미지 빌드 및 실행
+gudqja346411@c6r1s6 ~ % docker build -t my-web-image .
+gudqja346411@c6r1s6 ~ % docker run -d -p 8080:80 --name my-web-container my-web-image
+
+# 운영 상태 확인
+gudqja346411@c6r1s6 ~ % docker ps -a
+gudqja346411@c6r1s6 ~ % docker stats --no-stream
+
 # 운영 명령 확인
 gudqja346411@c6r1s6 ~ % docker images
 gudqja346411@c6r1s6 ~ % docker ps -a
@@ -80,6 +88,9 @@ root@abc123:/# exit
 
 gudqja346411@c6r1s6 ~ % docker build -t my-web-image .
 gudqja346411@c6r1s6 ~ % docker run -d -p 8080:80 --name my-web-container my-web-image
+
+# [바인드 마운트] 호스트 디렉토리를 컨테이너에 연결하여 실시간 수정 반영 확인
+gudqja346411@c6r1s6 ~ % docker run -d -p 8081:80 -v $(pwd):/usr/share/nginx/html --name bind-test nginx
 
 # 볼륨 생성 및 데이터 저장
 gudqja346411@c6r1s6 ~ % docker volume create my-data
@@ -101,10 +112,18 @@ user.email=...
 - **원인 가설:** 로컬과 원격 저장소의 커밋 히스토리가 달라 Git이 병합 방식을 결정하지 못함
 - **해결/대안:** `git config pull.rebase false` 명령어로 기본 병합 방식을 설정한 후, `--allow-unrelated-histories` 옵션을 주어 강제 병합 성공. 이후 Vim 편집기에서 `:wq`로 커밋 메시지 저장 후 push 완료.
 
-* **관찰 결과 요약:** `docker run -it`로 진입한 쉘에서 `exit`를 누르면 컨테이너가 완전히 종료(Exited)되지만, `docker exec -it`를 사용해 실행 중인 컨테이너에 접속한 경우 `exit`로 빠져나와도 컨테이너는 계속 백그라운드에서 실행 상태(Up)를 유지함을 확인했습니다.
+**사례 2: 컨테이너 내부에서 Docker 명령어 실행 시 오류**
 
-* **베이스 이미지:** `nginx:latest` (가벼운 웹 서버 구동 목적)
-* **커스텀 포인트:** `COPY index.html ...` (Nginx의 기본 웰컴 페이지를 내가 만든 커스텀 HTML 파일로 덮어씌워 나만의 웹페이지를 띄우기 위함)
+- **문제:** sh: docker: not found 에러 발생
+- **원인:** docker run -it를 통해 컨테이너 내부(Alpine/Ubuntu 등)에 진입한 상태에서 호스트 OS의 명령어인 docker를 다시 입력함. 컨테이너 내부에는 Docker 엔진이 설치되어 있지 않아 발생한 문제.
+- **해결:** exit 명령어로 컨테이너 밖(호스트 터미널)으로 빠져나온 뒤 명령어를 실행하여 해결.
+
+**관찰요약**
+docker run -it로 진입한 쉘에서 exit를 누르면 컨테이너가 완전히 종료(Exited)됩니다.
+반면, docker exec -it를 사용해 실행 중인 컨테이너에 접속한 경우 exit로 빠져나와도 컨테이너는 계속 백그라운드에서 실행 상태(Up)를 유지함을 확인했습니다.
+
+**베이스 이미지:** `nginx:latest` (가벼운 웹 서버 구동 목적)
+**커스텀 포인트:** `COPY index.html ...` (Nginx의 기본 웰컴 페이지를 내가 만든 커스텀 HTML 파일로 덮어씌워 나만의 웹페이지를 띄우기 위함)
 
 ```
 <img width="782" height="695" alt="evidence" src="https://github.com/user-attachments/assets/8e46eccf-ac2b-4dca-b1af-53c793ec030d" />
