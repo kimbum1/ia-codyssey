@@ -169,3 +169,8 @@ docker run -it로 진입한 쉘에서 exit를 누르면 컨테이너가 완전�
 <img width="769" height="534" alt="evidence2" src="https://github.com/user-attachments/assets/945bebd0-0e81-4bd3-9e84-91cdd019e198" />
 
 <img width="750" height="285" alt="evidence3" src="https://github.com/user-attachments/assets/57a5f396-0182-47dd-8e4b-c3d5c46503ca" />
+
+<img width="664" height="168" alt="스크린샷 2026-08-02 오후 5 45 39" src="https://github.com/user-attachments/assets/e075c40a-2aaf-4625-ae0c-b886d4bfece8" />
+
+<img width="424" height="41" alt="스크린샷 2026-08-02 오후 5 48 20" src="https://github.com/user-attachments/assets/9d370bcb-7743-4fce-8e9c-0c2b9ee4ee12" />
+
