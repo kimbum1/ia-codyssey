@@ -114,6 +114,35 @@ gudqja346411@c6r1s6 ~ % git config --list | grep user
 user.name=gudqja346411
 user.email=...
 
+# 현재 위치 확인 및 폴더 생성
+gudqja346411@c6r1s6 ~ % pwd
+/Users/gudqja346411
+gudqja346411@c6r1s6 ~ % mkdir -p my-project && cd my-project
+
+# 파일 생성 및 권한 변경 확인 
+gudqja346411@c6r1s6 my-web-site % ls -al
+drwxr-xr-x  14 gudqja346411  staff    448  7 30 06:27 .git
+-rwxr-xr-x   1 gudqja346411  staff      0  7 29 23:08 hello.txt
+drwx------   2 gudqja346411  staff     64  7 30 03:57 test-dir # 700 권한 확인
+
+# Docker Compose 실행 및 상태 확인
+gudqja346411@c6r1s6 my-web-site % docker-compose up -d
+[+] Running 2/2
+ ✔ Container my-web-site-web-1    Started
+ ✔ Container my-web-site-redis-1  Started
+
+# 포트 매핑 및 컨테이너 가동 확인 
+gudqja346411@c6r1s6 my-web-site % docker ps
+CONTAINER ID   IMAGE           STATUS          PORTS                  NAMES
+575a32687188   my-web-site-web  Up 10 seconds   0.0.0.0:8081->80/tcp   my-web-site-web-1
+d001d5fad262   redis:alpine    Up 10 seconds   6379/tcp               my-web-site-redis-1
+
+# 볼륨 데이터 저장 및 삭제 후 재생성 확인
+gudqja346411@c6r1s6 ~ % docker run -v my-data:/app ubuntu bash -c "echo 'saved' > /app/data.txt"
+gudqja346411@c6r1s6 ~ % docker rm -f $(docker ps -aq)
+gudqja346411@c6r1s6 ~ % docker run -v my-data:/app ubuntu cat /app/data.txt
+saved # <--- 데이터 유지 성공
+
 ##4 트러블슈팅
 
 **사례 1: GitHub 원격 저장소와 로컬 저장소 병합 충돌**
