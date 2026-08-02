@@ -1,5 +1,8 @@
 # 내 컴퓨터에 개발자용 '작업실' 꾸미기
 
+프로젝트 개요
+본 프로젝트의 목표는 로컬 환경에 최적화된 개발자 작업실을 구축하는 것입니다. 터미널 기본 조작부터 Docker를 이용한 컨테이너 기반 서비스 운영, 데이터 영속성 확보(Volume), 그리고 Git/GitHub를 이용한 버전 관리 및 협업 환경 설정을 직접 수행하며 백엔드 개발을 위한 기초 인프라 역량을 습득합니다.
+
 ## 1) 실행 환경
 - **OS**{
  ProductName:		macOS
@@ -26,7 +29,7 @@
 - [x] 포트 매핑 및 브라우저 접속 확인
 - [x] Docker 볼륨을 이용한 데이터 영속성 검증
 - [x] Git 설정 및 GitHub SSH 연동
-- [x] (보너스) Docker Compose 멀티 컨테이너 구축
+- [x] Docker Compose 멀티 컨테이너 구축
 
 ## 3) 수행 로그 및 검증
 
@@ -87,6 +90,12 @@ Inside Ubuntu
 root@abc123:/# exit
 
 gudqja346411@c6r1s6 ~ % docker build -t my-web-image .
+gudqja346411@c6r1s6 ~ % docker run -d -p 8080:80 --name my-web-container my-web-image
+
+# 이미지 빌드 (nginx 기반 커스텀)
+gudqja346411@c6r1s6 ~ % docker build -t my-web-image .
+
+# 컨테이너 실행 및 포트 매핑 (8080)
 gudqja346411@c6r1s6 ~ % docker run -d -p 8080:80 --name my-web-container my-web-image
 
 # [바인드 마운트] 호스트 디렉토리를 컨테이너에 연결하여 실시간 수정 반영 확인
