@@ -142,6 +142,135 @@ gudqja346411@c6r1s6 ~ % docker run -v my-data:/app ubuntu bash -c "echo 'saved' 
 gudqja346411@c6r1s6 ~ % docker rm -f $(docker ps -aq)
 gudqja346411@c6r1s6 ~ % docker run -v my-data:/app ubuntu cat /app/data.txt
 saved # <--- 데이터 유지 성공
+gudqja346411@c5r1s5 ~ % docker run hello-world
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+4f55086f7dd0: Pull complete 
+Digest: sha256:7f4da0fc94bcece205a8c0b6f4d11c8196924654ffe5c4d1aa439b7f632048b2
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+
+gudqja346411@c5r1s5 ~ % docker images
+REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
+hello-world   latest    e2ac70e7319a   4 months ago   10.1kB
+gudqja346411@c5r1s5 ~ % # 먼저 실행됐던 컨테이너를 삭제 (이미지를 지우려면 컨테이너부터 지워야 함)
+docker rm $(docker ps -a -q --filter reference=hello-world)
+
+# 이미지 삭제
+docker rmi hello-world
+zsh: unknown file attribute: ^,
+Error response from daemon: invalid filter 'reference'
+docker: 'docker rm' requires at least 1 argument
+
+Usage:  docker rm [OPTIONS] CONTAINER [CONTAINER...]
+
+See 'docker rm --help' for more information
+zsh: command not found: #
+Error response from daemon: conflict: unable to remove repository reference "hello-world" (must force) - container e646172f9cea is using its referenced image e2ac70e7319a
+gudqja346411@c5r1s5 ~ % 
+
+Error response from daemon: No such container: e646172f9cea
+zsh: command not found: #
+Error response from daemon: No such image: hello-world:latest
+gudqja346411@c5r1s5 my-web-site % docker rm -f e646172f9cea
+Error response from daemon: No such container: e646172f9cea
+gudqja346411@c5r1s5 my-web-site % docker rmi hello-world
+Error response from daemon: No such image: hello-world:latest
+gudqja346411@c5r1s5 my-web-site % docker images
+REPOSITORY   TAG       IMAGE ID       CREATED          SIZE
+my-web-app   latest    2713681a8789   26 minutes ago   161MB
+redis        latest    0458cdd27215   7 hours ago      146MB
+gudqja346411@c5r1s5 my-web-site % 
+
+Run 'docker compose COMMAND --help' for more information on a command.
+unknown docker command: "compose psdocker-compose"
+gudqja346411@c5r1s5 my-web-site % # 1. 로그를 저장할 디렉토리 생성
+mkdir logs
+
+# 2. 디렉토리 권한을 755(읽고 실행 가능)로 변경
+chmod 755 logs
+
+# 3. 권한이 잘 변경되었는지 확인
+ls -ld logs
+zsh: command not found: #
+zsh: no matches found: 755(읽고 실행 가능)로
+zsh: command not found: #
+drwxr-xr-x  2 gudqja346411  gudqja346411  64  8  5 16:17 logs
+gudqja346411@c5r1s5 my-web-site % git add docker-compose.yml
+git commit -m "Docker Compose 설정 추가 및 로그 디렉토리 생성"
+[master 3c39392] Docker Compose 설정 추가 및 로그 디렉토리 생성
+ 1 file changed, 10 insertions(+)
+ create mode 100644 docker-compose.yml
+gudqja346411@c5r1s5 my-web-site % docker-compose ps
+WARN[0000] /Users/gudqja346411/my-web-site/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+NAME                     IMAGE          COMMAND                   SERVICE    CREATED         STATUS         PORTS
+my-web-site-database-1   redis:latest   "docker-entrypoint.s…"   database   5 minutes ago   Up 5 minutes   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
+my-web-site-web-1        my-web-app     "/docker-entrypoint.…"   web        5 minutes ago   Up 5 minutes   0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
+gudqja346411@c5r1s5 my-web-site % curl -I http://localhost:8081
+HTTP/1.1 200 OK
+Server: nginx/1.31.3
+Date: Wed, 05 Aug 2026 07:22:37 GMT
+Content-Type: text/html
+Content-Length: 74
+Last-Modified: Wed, 05 Aug 2026 07:07:18 GMT
+Connection: keep-alive
+ETag: "6a72e126-4a"
+Accept-Ranges: bytes
+
+gudqja346411@c5r1s5 my-web-site % # 전체 컨테이너 확인
+docker ps
+
+# Git 커밋 히스토리 확인
+git log --oneline
+zsh: command not found: #
+CONTAINER ID   IMAGE          COMMAND                   CREATED          STATUS          PORTS                                         NAMES
+20f8aa7496fd   my-web-app     "/docker-entrypoint.…"   5 minutes ago    Up 5 minutes    0.0.0.0:8081->80/tcp, [::]:8081->80/tcp       my-web-site-web-1
+eace4da91944   redis:latest   "docker-entrypoint.s…"   5 minutes ago    Up 5 minutes    0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp   my-web-site-database-1
+36babaeb1709   my-web-app     "/docker-entrypoint.…"   14 minutes ago   Up 14 minutes   0.0.0.0:9000->80/tcp, [::]:9000->80/tcp       my-container
+zsh: command not found: #
+3c39392 (HEAD -> master) Docker Compose 설정 추가 및 로그 디렉토리 생성
+a273054 나의 첫 번째 도커 웹 서버 프로젝트 완료
+gudqja346411@c5r1s5 my-web-site % 
+
+CONTAINER ID   IMAGE        STATUS              PORTS                                     NAMES
+36babaeb1709   my-web-app   Up About a minute   0.0.0.0:9000->80/tcp, [::]:9000->80/tcp   my-container
+
+HTTP/1.1 200 OK
+Server: nginx/1.31.3
+Content-Type: text/html
+
+commit a273054f89199a3363589a07fea0c661e70e95e6
+Author: kimbum1 <gudqja34@gmail.com>
+Date:   Wed Aug 5 16:12:18 2026 +0900
+
+    나의 첫 번째 도커 웹 서버 프로젝트 완료
+
+-rw-r--r--  1 gudqja346411  staff   ...  Dockerfile
+-rw-r--r--  1 gudqja346411  staff   ...  index.html
+
+FROM nginx:latest
+COPY index.html /usr/share/nginx/html/index.html<img width="1247" height="542" alt="스크린샷 2026-08-05 오후 4 13 08" src="https://github.com/user-attachments/assets/046d1b48-ce6b-466f-bc3c-5a02332c9330" />
+
 
 ##4 트러블슈팅
 
