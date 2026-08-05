@@ -275,8 +275,126 @@ HTTP/1.1 200 OK
 Server: nginx/1.31.3
 Content-Type: text/html
 
+#원격 저장소(Remote) 설정 및 Push 결과
+$ git remote add origin https://github.com/kimbum1/ia-codyssey.git
+$ git remote -v
+origin  https://github.com/kimbum1/ia-codyssey.git (fetch)
+origin  https://github.com/kimbum1/ia-codyssey.git (push)
 
-##4 트러블슈팅
+$ git push origin main
+Enumerating objects: 24, done.
+Counting objects: 100% (24/24), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (20/20), done.
+Writing objects: 100% (24/24), 5.12 KiB | 1.28 MiB/s, done.
+Total 24 (delta 6), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (6/6), done.
+To https://github.com/kimbum1/ia-codyssey.git
+ * [new branch]      main -> main
+
+# 프로젝트 디렉토리 구조 및 설계 상세
+.
+├── Dockerfile              # 커스텀 웹 서버 이미지를 빌드하기 위한 설정 파일
+├── docker-compose.yml      # Nginx와 Redis 컨테이너를 일괄 관리하는 설정 파일
+├── index.html              # 웹 서버에서 출력할 메인 페이지 파일
+├── README.md               # 프로젝트 매뉴얼 및 과제 수행 기록
+└── .gitignore              # Git 관리 제외 대상 설정
+
+$ git clone https://github.com/kimbum1/ia-codyssey.git
+$ cd ia-codyssey
+
+$ docker-compose up -d --build
+
+#Docker 이미지와 컨테이너의 개념적 차이
+도커 환경을 구축하며 이해한 이미지와 컨테이너의 핵심 차이점을 사례별로 정리하였습니다.
+
+[개념 비교]
+구분	Docker Image (이미지)	Docker Container (컨테이너)
+역할	실행에 필요한 모든 파일의 집합 (설계도)	이미지를 실행한 상태 (실제 서비스)
+상태	불변성 (Immutable): 수정 불가	가변성: 실행 중 데이터 쓰기 가능
+비유	프로그램 설치 파일, 붕어빵 틀	실행 중인 프로그램, 붕어빵
+[사례별 상세 설명]
+Build (빌드 단계):
+Dockerfile을 기반으로 이미지를 생성합니다. 이 이미지는 읽기 전용(Read-only)이며, 한 번 빌드되면 내부 내용을 직접 수정할 수 없습니다. 수정이 필요하면 다시 빌드하여 새로운 이미지를 만들어야 합니다.
+Run (실행 단계):
+이미지를 docker run 하면 컨테이너가 생성됩니다. 하나의 이미지로 여러 개의 독립된 컨테이너를 동시에 띄울 수 있으며, 각 컨테이너는 격리된 환경에서 동작합니다.
+Modify (수정 및 데이터 저장):
+컨테이너 내부에서 파일을 생성하거나 수정하면, 컨테이너 전용 '최상단 쓰기 레이어'에 저장됩니다. 하지만 컨테이너를 삭제하면 이 데이터는 사라집니다. 반면, 원본 이미지는 컨테이너에서 무슨 일이 일어나든 변하지 않고 그대로 유지됩니다. (데이터 영속성을 위해 Volume을 사용하는 이유이기도 합니다.)
+
+#포트 매핑의 원리 및 보안 고려 사항
+컨테이너 환경에서 외부와 통신하기 위해 설정한 포트 매핑(-p 8080:80)의 기술적 배경과 보안 근거를 정리하였습니다.
+
+[포트 노출의 필요성 및 네임스페이스]
+네트워크 네임스페이스(Network Namespace) 격리: Docker 컨테이너는 호스트 OS와 분리된 독립적인 네트워크 공간(Namespace)을 가집니다. 컨테이너 내부에서 80번 포트로 웹 서버가 돌아가고 있어도, 호스트 입장에서는 격리된 공간의 포트이므로 직접 접근할 수 없습니다.
+포트 매핑(Port Mapping): 호스트의 특정 포트(예: 8080)와 컨테이너의 포트(예: 80)를 연결하는 '터널'을 뚫어주는 과정입니다. 이를 통해 외부 사용자가 호스트 IP의 8080 포트로 접속했을 때 컨테이너 내부 서비스에 도달할 수 있게 합니다.
+[보안 고려 사항]
+최소 권한의 원칙 (Least Privilege): 서비스 운영에 꼭 필요한 포트만 노출해야 합니다. 불필요한 포트를 열어두면 공격자의 침입 경로(Attack Surface)가 될 수 있습니다.
+호스트 바인딩 제한: 0.0.0.0:8080으로 매핑하면 모든 네트워크 인터페이스에서 접근이 가능해 위험할 수 있습니다. 로컬 개발 시에는 127.0.0.1:8080과 같이 특정 IP에 바인딩하여 외부 노출을 차단하는 것이 보안상 안전합니다.
+컨테이너 내부 포트 보호: 외부에는 8080이나 443 같은 표준/비표준 포트를 노출하더라도, 컨테이너 내부 포트는 외부에서 직접 접근할 수 없으므로 1차적인 방어막 역할을 수행합니다.
+
+#호스트·컨테이너 경로 설정 기준 및 재현성
+Docker 환경 구축 시 호스트(Host)와 컨테이너(Container) 간의 경로를 설정하는 기준과 재현성 확보를 위한 전략을 정리하였습니다.
+
+[경로 선택 기준: 절대 경로 vs 상대 경로]
+구분	절대 경로 (Absolute Path)	상대 경로 (Relative Path)
+정의	/home/user/app/data와 같이 전체 경로 명시	./data와 같이 현재 작업 디렉토리 기준 명시
+사용 상황	[배포/운영] 특정 서버의 고정된 로그 저장소나 시스템 디렉토리에 접근할 때	[개발/협업] 프로젝트 내부의 소스 코드나 설정 파일을 컨테이너와 동기화할 때
+장점	경로가 명확하여 혼동이 없음	**재현성(Portability)**이 뛰어남. 어느 PC에서든 즉시 실행 가능
+단점	사용자마다 환경이 달라 타 PC에서 실행 시 오류 발생 가능	실행 시점의 작업 디렉토리(pwd)에 의존함
+[재현성(Reproducibility)을 위한 가이드라인]
+Docker Compose 활용: docker run 명령어에서 절대 경로를 사용하는 대신, docker-compose.yml 파일 내에서 상대 경로를 사용합니다. 이렇게 하면 팀원들이 프로젝트를 복제(Clone)했을 때 별도의 경로 수정 없이 바로 docker-compose up으로 동일한 환경을 구축할 수 있습니다.
+컨테이너 내부 경로는 항상 '절대 경로': 호스트의 경로는 상대적일 수 있지만, 컨테이너 내부의 경로는 이미지 설계 시점에 정해진 절대 경로(예: /usr/share/nginx/html)를 사용하는 것이 원칙입니다.
+[실습 예시]
+비추천 (재현성 낮음): docker run -v /Users/kimbum1/project/nginx/html:/usr/share/nginx/html nginx
+이유: 다른 사용자의 PC에는 /Users/kimbum1/... 경로가 없으므로 에러가 발생합니다.
+추천 (재현성 높음): volumes: - ./html:/usr/share/nginx/html (Docker Compose)
+이유: 프로젝트 폴더를 기준으로 경로를 찾으므로, 누구나 동일하게 실행 가능합니다.
+
+#리눅스 파일 권한(Permission) 이해 및 설정
+파일의 보안과 실행 제어를 위해 사용한 chmod 명령어의 권한 숫자 의미와 활용 상황을 정리하였습니다.
+
+[권한 숫자의 구성 및 의미]
+리눅스 권한은 소유자 / 그룹 / 기타 사용자 순서의 세 자리 숫자로 표기하며, 각 숫자는 다음 비트의 합으로 계산됩니다.
+
+4 (Read, r): 읽기 권한
+2 (Write, w): 쓰기 권한
+1 (Execute, x): 실행 권한
+[755와 644의 차이 및 사용 상황]
+755 (rwxr-xr-x): 소유자는 모든 권한(읽기/쓰기/실행)을 가지고, 그룹과 기타 사용자는 읽기와 실행만 가능하며, 주로 실행 파일(스크립트)이나 디렉토리에 적용합니다.
+644 (rw-r--r--): 소유자는 읽고 쓸 수 있지만, 그룹과 기타 사용자는 읽기만 가능하며, 보안상 실행이 필요 없는 일반 설정 파일이나 문서 파일에 적용합니다.
+
+# 포트 충돌 진단 및 해결 절차
+
+컨테이너 실행 시 "Bind for 0.0.0.0:8080 failed"와 같은 포트 충돌 오류가 발생할 경우, 아래의 절차에 따라 해결합니다.
+
+### 1단계: 포트 점유 상태 및 프로세스 확인
+현재 어떤 프로세스가 해당 포트(예: 8080)를 사용 중인지 확인합니다.
+*   **명령어**: `sudo lsof -i :8080` 또는 `sudo netstat -tulnp | grep :8080`
+*   **확인 내용**: 출력 결과에서 해당 포트를 점유하고 있는 프로세스의 **PID(프로세스 ID)**를 확인합니다.
+
+### 2단계: 충돌 프로세스 종료
+포트를 점유하고 있는 기존 프로세스를 종료하여 포트를 확보합니다.
+*   **명령어**: `sudo kill -9 <확인된 PID>`
+*   **예시**: PID가 1234라면 `sudo kill -9 1234` 실행
+
+### 3단계: 도커 포트 설정 변경 (우회 방법)
+기존 프로세스를 종료할 수 없는 경우, 도커 컨테이너의 호스트 포트 번호를 변경하여 실행합니다.
+*   **Docker Compose 수정**: `docker-compose.yml`에서 `- "8081:80"`과 같이 왼쪽의 호스트 포트를 변경합니다.
+*   **Docker Run 수정**: `docker run -p 8081:80 nginx`와 같이 포트 매핑 값을 수정하여 실행합니다.
+
+# 데이터 백업 및 복구 전략
+
+도커 컨테이너의 데이터를 안전하게 관리하기 위한 백업 및 복원 절차입니다.
+
+### 1) 볼륨 데이터 백업 (tar 이용)
+실행 중인 컨테이너의 볼륨 데이터를 압축 파일로 백업합니다.
+- **명령어**: 
+  ```bash
+  docker run --rm --volumes-from bind-test -v $(pwd):/backup ubuntu tar cvf /backup/backup.tar /usr/share/nginx/html
+
+docker run --rm --volumes-from [새컨테이너명] -v $(pwd):/backup ubuntu bash -c "cd /usr/share/nginx/html && tar xvf /backup/backup.tar --strip 1"
+
+## 트러블슈팅
 
 **사례 1: GitHub 원격 저장소와 로컬 저장소 병합 충돌**
 - **문제:** `git pull origin main` 실행 시 `fatal: Need to specify how to reconcile divergent branches` 에러 발생
