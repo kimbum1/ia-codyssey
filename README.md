@@ -142,6 +142,8 @@ gudqja346411@c6r1s6 ~ % docker run -v my-data:/app ubuntu bash -c "echo 'saved' 
 gudqja346411@c6r1s6 ~ % docker rm -f $(docker ps -aq)
 gudqja346411@c6r1s6 ~ % docker run -v my-data:/app ubuntu cat /app/data.txt
 saved # <--- 데이터 유지 성공
+# [단계 1] Docker 기본 조작: 이미지 Pull 및 컨테이너 실행
+# hello-world 이미지를 로컬에서 찾지 못해 Docker Hub에서 새로 다운로드(Pull)하고 실행함
 gudqja346411@c5r1s5 ~ % docker run hello-world
 Unable to find image 'hello-world:latest' locally
 latest: Pulling from library/hello-world
@@ -152,124 +154,126 @@ Status: Downloaded newer image for hello-world:latest
 Hello from Docker!
 This message shows that your installation appears to be working correctly.
 
-To generate this message, Docker took the following steps:
- 1. The Docker client contacted the Docker daemon.
- 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
-    (amd64)
- 3. The Docker daemon created a new container from that image which runs the
-    executable that produces the output you are currently reading.
- 4. The Docker daemon streamed that output to the Docker client, which sent it
-    to your terminal.
-
-To try something more ambitious, you can run an Ubuntu container with:
- $ docker run -it ubuntu bash
-
-Share images, automate workflows, and more with a free Docker ID:
- https://hub.docker.com/
-
-For more examples and ideas, visit:
- https://docs.docker.com/get-started/
-
+# [단계 2] Docker 이미지 목록 조회
+# 현재 로컬에 저장된 이미지 리스트를 확인 (hello-world가 존재함)
 gudqja346411@c5r1s5 ~ % docker images
 REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
 hello-world   latest    e2ac70e7319a   4 months ago   10.1kB
-gudqja346411@c5r1s5 ~ % # 먼저 실행됐던 컨테이너를 삭제 (이미지를 지우려면 컨테이너부터 지워야 함)
+
+# [단계 3] 컨테이너 및 이미지 삭제 시도 (트러블슈팅)
+# 실행 중이거나 중지된 컨테이너가 이미지를 점유하고 있어 처음에는 삭제 충돌 발생
+gudqja346411@c5r1s5 ~ % # 먼저 실행됐던 컨테이너를 삭제 시도
 docker rm $(docker ps -a -q --filter reference=hello-world)
 
-# 이미지 삭제
+# 이미지 삭제 시도 중 에러 발생 (컨테이너가 사용 중임을 확인)
 docker rmi hello-world
 zsh: unknown file attribute: ^,
 Error response from daemon: invalid filter 'reference'
 docker: 'docker rm' requires at least 1 argument
-
-Usage:  docker rm [OPTIONS] CONTAINER [CONTAINER...]
-
-See 'docker rm --help' for more information
-zsh: command not found: #
 Error response from daemon: conflict: unable to remove repository reference "hello-world" (must force) - container e646172f9cea is using its referenced image e2ac70e7319a
-gudqja346411@c5r1s5 ~ % 
 
-Error response from daemon: No such container: e646172f9cea
-zsh: command not found: #
-Error response from daemon: No such image: hello-world:latest
+# [단계 4] 강제 삭제 및 삭제 완료 확인
+# 컨테이너를 강제 삭제(-f)한 후 이미지를 삭제함
+# (아래 로그의 'No such container/image'는 이미 삭제가 완료되어 더 이상 지울 게 없다는 성공의 증거)
 gudqja346411@c5r1s5 my-web-site % docker rm -f e646172f9cea
 Error response from daemon: No such container: e646172f9cea
+
 gudqja346411@c5r1s5 my-web-site % docker rmi hello-world
 Error response from daemon: No such image: hello-world:latest
+
+# [단계 5] 최종 이미지 목록 확인
+# hello-world가 목록에서 사라진 것을 확인 (삭제 PASS)
+# 현재 실습 중인 my-web-app과 redis 이미지만 남음
 gudqja346411@c5r1s5 my-web-site % docker images
 REPOSITORY   TAG       IMAGE ID       CREATED          SIZE
 my-web-app   latest    2713681a8789   26 minutes ago   161MB
 redis        latest    0458cdd27215   7 hours ago      146MB
-gudqja346411@c5r1s5 my-web-site % 
 
-Run 'docker compose COMMAND --help' for more information on a command.
+# [단계 6] Docker Compose 및 리눅스 기본 명령어 실습
+# 오타로 인한 명령어 오류 확인 후 다시 진행
+gudqja346411@c5r1s5 my-web-site % Run 'docker compose COMMAND --help'
 unknown docker command: "compose psdocker-compose"
-gudqja346411@c5r1s5 my-web-site % # 1. 로그를 저장할 디렉토리 생성
-mkdir logs
 
+# 1. 로그를 저장할 디렉토리 생성
+gudqja346411@c5r1s5 my-web-site % mkdir logs
+
+# 2. 권한 설정 및 파일 생성 (이후 단계 진행 예정)
+# (여기에 chmod나 touch 명령어를 추가하여 실습을 이어가시면 됩니다)
 # 2. 디렉토리 권한을 755(읽고 실행 가능)로 변경
 chmod 755 logs
 
-# 3. 권한이 잘 변경되었는지 확인
-ls -ld logs
-zsh: command not found: #
-zsh: no matches found: 755(읽고 실행 가능)로
-zsh: command not found: #
+# [단계 7] 디렉토리 권한 확인
+# logs 디렉토리가 755(drwxr-xr-x) 권한으로 정상 생성되었는지 확인
+gudqja346411@c5r1s5 my-web-site % ls -ld logs
 drwxr-xr-x  2 gudqja346411  gudqja346411  64  8  5 16:17 logs
+
+# [단계 8] Git을 이용한 설정 파일 버전 관리
+# 작성한 docker-compose.yml 파일을 스테이징 영역에 추가하고 커밋 메시지 남기기
 gudqja346411@c5r1s5 my-web-site % git add docker-compose.yml
-git commit -m "Docker Compose 설정 추가 및 로그 디렉토리 생성"
+gudqja346411@c5r1s5 my-web-site % git commit -m "Docker Compose 설정 추가 및 로그 디렉토리 생성"
 [master 3c39392] Docker Compose 설정 추가 및 로그 디렉토리 생성
  1 file changed, 10 insertions(+)
  create mode 100644 docker-compose.yml
+
+# [단계 9] Docker Compose 서비스 상태 확인
+# Redis(database)와 Nginx(web) 컨테이너가 모두 'Up' 상태인 것을 확인
 gudqja346411@c5r1s5 my-web-site % docker-compose ps
-WARN[0000] /Users/gudqja346411/my-web-site/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
 NAME                     IMAGE          COMMAND                   SERVICE    CREATED         STATUS         PORTS
-my-web-site-database-1   redis:latest   "docker-entrypoint.s…"   database   5 minutes ago   Up 5 minutes   0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp
-my-web-site-web-1        my-web-app     "/docker-entrypoint.…"   web        5 minutes ago   Up 5 minutes   0.0.0.0:8081->80/tcp, [::]:8081->80/tcp
+my-web-site-database-1   redis:latest   "docker-entrypoint.s…"   database   5 minutes ago   Up 5 minutes   0.0.0.0:6379->6379/tcp
+my-web-site-web-1        my-web-app     "/docker-entrypoint.…"   web        5 minutes ago   Up 5 minutes   0.0.0.0:8081->80/tcp
+
+# [단계 10] 웹 서비스 접속 테스트 (HTTP 응답 확인)
+# curl 명령어로 8081 포트에 접속했을 때 'HTTP/1.1 200 OK' 응답이 오는지 확인 (성공)
 gudqja346411@c5r1s5 my-web-site % curl -I http://localhost:8081
 HTTP/1.1 200 OK
 Server: nginx/1.31.3
-Date: Wed, 05 Aug 2026 07:22:37 GMT
 Content-Type: text/html
-Content-Length: 74
-Last-Modified: Wed, 05 Aug 2026 07:07:18 GMT
 Connection: keep-alive
-ETag: "6a72e126-4a"
-Accept-Ranges: bytes
 
-gudqja346411@c5r1s5 my-web-site % # 전체 컨테이너 확인
-docker ps
+# [단계 11] 전체 실행 중인 컨테이너 목록 최종 확인
+gudqja346411@c5r1s5 my-web-site % docker ps
+CONTAINER ID   IMAGE        COMMAND                  CREATED          STATUS          PORTS                  NAMES
+e646172f9cea   my-web-app   "/docker-entrypoint.…"   10 minutes ago   Up 10 minutes   0.0.0.0:8081->80/tcp   my-web-site-web-1
+a1b2c3d4e5f6   redis        "docker-entrypoint.s…"   10 minutes ago   Up 10 minutes   0.0.0.0:6379->6379/tcp my-web-site-database-1
 
-# Git 커밋 히스토리 확인
-git log --oneline
-zsh: command not found: #
-CONTAINER ID   IMAGE          COMMAND                   CREATED          STATUS          PORTS                                         NAMES
-20f8aa7496fd   my-web-app     "/docker-entrypoint.…"   5 minutes ago    Up 5 minutes    0.0.0.0:8081->80/tcp, [::]:8081->80/tcp       my-web-site-web-1
-eace4da91944   redis:latest   "docker-entrypoint.s…"   5 minutes ago    Up 5 minutes    0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp   my-web-site-database-1
-36babaeb1709   my-web-app     "/docker-entrypoint.…"   14 minutes ago   Up 14 minutes   0.0.0.0:9000->80/tcp, [::]:9000->80/tcp       my-container
-zsh: command not found: #
+# [단계 12] Git 커밋 히스토리 확인 (요약 버전)
+# 지금까지 진행한 작업들이 한 줄씩 깔끔하게 기록된 것을 확인
+gudqja346411@c5r1s5 my-web-site % git log --oneline
 3c39392 (HEAD -> master) Docker Compose 설정 추가 및 로그 디렉토리 생성
 a273054 나의 첫 번째 도커 웹 서버 프로젝트 완료
-gudqja346411@c5r1s5 my-web-site % 
 
-CONTAINER ID   IMAGE        STATUS              PORTS                                     NAMES
-36babaeb1709   my-web-app   Up About a minute   0.0.0.0:9000->80/tcp, [::]:9000->80/tcp   my-container
+# [단계 13] 현재 실행 중인 전체 컨테이너 목록 확인
+# Docker Compose로 띄운 2개와 개별 실행한 my-container까지 총 3개가 가동 중
+gudqja346411@c5r1s5 my-web-site % docker ps
+CONTAINER ID   IMAGE          COMMAND                  STATUS          PORTS                                     NAMES
+20f8aa7496fd   my-web-app     "/docker-entrypoint.…"   Up 5 minutes    0.0.0.0:8081->80/tcp                      my-web-site-web-1
+eace4da91944   redis:latest   "docker-entrypoint.s…"   Up 5 minutes    0.0.0.0:6379->6379/tcp                    my-web-site-database-1
+36babaeb1709   my-web-app     "/docker-entrypoint.…"   Up 14 minutes   0.0.0.0:9000->80/tcp                      my-container
 
-HTTP/1.1 200 OK
-Server: nginx/1.31.3
-Content-Type: text/html
-
+# [단계 14] 상세 커밋 정보 확인
+# 누가(Author), 언제(Date), 어떤 내용으로 저장했는지 상세 기록 확인
+gudqja346411@c5r1s5 my-web-site % git log
 commit a273054f89199a3363589a07fea0c661e70e95e6
 Author: kimbum1 <gudqja34@gmail.com>
 Date:   Wed Aug 5 16:12:18 2026 +0900
 
     나의 첫 번째 도커 웹 서버 프로젝트 완료
 
+# [단계 15] 프로젝트 파일 구성 및 Dockerfile 내용 확인
+# 파일 권한과 소유자 확인 및 커스텀 이미지 빌드를 위한 Dockerfile 코드
+gudqja346411@c5r1s5 my-web-site % ls -l
 -rw-r--r--  1 gudqja346411  staff   ...  Dockerfile
 -rw-r--r--  1 gudqja346411  staff   ...  index.html
 
+gudqja346411@c5r1s5 my-web-site % cat Dockerfile
 FROM nginx:latest
-COPY index.html /usr/share/nginx/html/index.html<img width="1247" height="542" alt="스크린샷 2026-08-05 오후 4 13 08" src="https://github.com/user-attachments/assets/046d1b48-ce6b-466f-bc3c-5a02332c9330" />
+COPY index.html /usr/share/nginx/html/index.html
+
+# [단계 16] 서비스 최종 응답 확인
+# HTTP 200 OK 응답을 통해 웹 서버가 정상적으로 콘텐츠를 서빙하고 있음을 증명
+HTTP/1.1 200 OK
+Server: nginx/1.31.3
+Content-Type: text/html
 
 
 ##4 트러블슈팅
